@@ -433,6 +433,12 @@ static struct quirk_entry quirk_acer_predator_phn16_71 = {
 	.four_zone_kb = 1,
 };
 
+static struct quirk_entry quirk_acer_predator_ptx17_71 = {
+	.predator_v4 = 1,
+	.cpu_fans = 1,
+	.gpu_fans = 2,
+};
+
 static struct quirk_entry quirk_acer_nitro = {
 	.nitro_sense = 1,
 };
@@ -661,6 +667,15 @@ static const struct dmi_system_id acer_quirks[] __initconst = {
 			DMI_MATCH(DMI_PRODUCT_NAME, "Predator PH18-71"),
 		},
 		.driver_data = &quirk_acer_predator_v4,
+	},
+	{
+		.callback = dmi_matched,
+		.ident = "Acer Predator PTX17-71",
+		.matches = {
+			DMI_MATCH(DMI_SYS_VENDOR, "Acer"),
+			DMI_MATCH(DMI_PRODUCT_NAME, "Predator PTX17-71"),
+		},
+		.driver_data = &quirk_acer_predator_ptx17_71,
 	},
 	{
 		.callback = set_force_caps,
@@ -1775,7 +1790,7 @@ static int acer_backlight_init(struct device *dev)
 
 	acer_backlight_device = bd;
 
-	bd->props.power = BACKLIGHT_POWER_ON;
+	bd->props.power = FB_BLANK_UNBLANK; // BACKLIGHT_POWER_ON;
 	bd->props.brightness = read_brightness(bd);
 	backlight_update_status(bd);
 	return 0;
@@ -2351,12 +2366,21 @@ static void acer_rfkill_exit(void)
 	}
 }
 
-static void acer_wmi_notify(union acpi_object *obj, void *context)
+static void acer_wmi_notify(u32 value, void *context)
 {
+	struct acpi_buffer response = { ACPI_ALLOCATE_BUFFER, NULL };
+	union acpi_object *obj;
 	struct event_return_value return_value;
+	acpi_status status;
 	u16 device_state;
 	const struct key_entry *key;
 	u32 scancode;
+
+	status = wmi_get_event_data(value, &response);
+	if (status != AE_OK) {
+		pr_warn("bad event status 0x%x\n", status);
+		return;
+	}
 
 	if (!obj)
 		return;
@@ -3931,7 +3955,7 @@ static struct platform_driver acer_platform_driver = {
 		.pm = &acer_pm,
 	},
 	.probe = acer_platform_probe,
-	.remove = acer_platform_remove,
+	.remove_new = acer_platform_remove,
 	.shutdown = acer_platform_shutdown,
 };
 

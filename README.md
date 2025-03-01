@@ -1,4 +1,7 @@
-# Unofficial Linux Kernel Module for Acer Gaming RGB Keyboard Backlight and Turbo Mode (Acer Predator , Nitro)
+# Unofficial Linux Kernel Module for Acer Gaming RGB Keyboard Backlight and Turbo Mode (Acer Predator , Nitro) (This repo is PTX17-71 port and backported for linux kernel 6.5. (Forked from the 0x7375646F repo))
+
+Note for Acer Predator Triton 17 X (PTX17-71) only fan control is tested so far. And still I can control with only 2 fan controls as in the documentation below. This laptop should have 1 cpu and 2 gpu fans so I should be able to use 3 separate controls (if I first figure it out how). 
+    
 The code base is still in its early stages, as I’ve just started working on developing this kernel module. It's a bit messy at the moment, but I’m hopeful that, with your help, we can collaborate to improve its structure and make it more organized over time.
 
 Inspired by [acer-predator-turbo](https://github.com/JafarAkhondali/acer-predator-turbo-and-rgb-keyboard-linux-module), which has a similar goal, this project was born out of my own challenges. I faced issues detecting the Turbo key and ended up using [acer_wmi](https://github.com/torvalds/linux/blob/master/drivers/platform/x86/acer-wmi.c), but it lacked key features like RGB , custom fan support, battery limiter, and more. As a result, I decided to implement these missing features in my own project.
@@ -9,7 +12,7 @@ To begin, identify your current kernel version:
 uname -r
 ```
 
-Install the appropriate Linux headers based on your kernel version. This module has been tested with kernel version (6.12,6.13) zen. 
+Install the appropriate Linux headers based on your kernel version. This module has been tested with kernel version (6.5.0). If you want 6.12 or 6.13 clone the original repo from 0x7375646F and possibly apply my changes by using git diff or just unix diff utils.
 For Arch Linux:
 ```bash
 sudo pacman -S linux-headers
