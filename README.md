@@ -1,6 +1,6 @@
 # Unofficial Linux Kernel Module for Acer Gaming RGB Keyboard Backlight and Turbo Mode (Acer Predator , Nitro) (This repo is PTX17-71 port and backported for linux kernel 6.5. (Forked from the 0x7375646F repo))
 
-Note for Acer Predator Triton 17 X (PTX17-71) only fan control is tested so far. And still I can control with only 2 fan controls as in the documentation below. This laptop should have 1 cpu and 2 gpu fans so I should be able to use 3 separate controls (if I first figure it out how). 
+Note for Acer Predator Triton 17 X (PTX17-71) only fan control is tested so far. This is very experimental early stage of implementation of the 3 fan controls for cpu, gpu1 and gpu2. 
     
 The code base is still in its early stages, as I’ve just started working on developing this kernel module. It's a bit messy at the moment, but I’m hopeful that, with your help, we can collaborate to improve its structure and make it more organized over time.
 
@@ -124,9 +124,9 @@ Controls the CPU and GPU fan speeds.
 - **100** – Maximum fan speed
 - Other values like **50, 55, 70** can be set according to your preference.
 
-Example (set CPU to 50 and GPU to 70):
+Example (set CPU to 50, GPU1 to 70, GPU2 to 70):
 
-`echo 50,70 | sudo tee /sys/module/linuwu_sense/drivers/platform:acer-wmi/acer-wmi/predator_sense/fan_speed`
+`echo 50,70,70 | sudo tee /sys/module/linuwu_sense/drivers/platform:acer-wmi/acer-wmi/predator_sense/fan_speed`
 
 ---
 
