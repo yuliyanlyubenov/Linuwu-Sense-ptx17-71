@@ -1,10 +1,10 @@
 # Unofficial Linux Kernel Module for Acer Gaming RGB Keyboard Backlight and Turbo Mode (Acer Predator , Nitro) (This repo is PTX17-71 port and backported for linux kernel 6.5. (Forked from the 0x7375646F repo))
 
-Note for Acer Predator Triton 17 X (PTX17-71) only fan control is tested so far. This is very experimental early stage of implementation of the 3 fan controls for cpu, gpu1 and gpu2. 
+Note for Acer Predator Triton 17 X (PTX17-71) only fan control is tested so far. This is very experimental early stage of implementation of the 3 fan controls for cpu, gpu fan1 and gpu fan2. 
     
 The code base is still in its early stages, as I’ve just started working on developing this kernel module. It's a bit messy at the moment, but I’m hopeful that, with your help, we can collaborate to improve its structure and make it more organized over time.
 
-Inspired by [acer-predator-turbo](https://github.com/JafarAkhondali/acer-predator-turbo-and-rgb-keyboard-linux-module), which has a similar goal, this project was born out of my own challenges. I faced issues detecting the Turbo key and ended up using [acer_wmi](https://github.com/torvalds/linux/blob/master/drivers/platform/x86/acer-wmi.c), but it lacked key features like RGB , custom fan support, battery limiter, and more. As a result, I decided to implement these missing features in my own project.
+Forked from [0x7375646F's Linuwu-Sense](https://github.com/0x7375646F/Linuwu-Sense), with aim to support for Acer Predator Triton 17 X unique features like 3 fan controls and per key RGB keyboard controls. Also my goal is to make this code compatible as much as possible with other acer laptops and in general with the original acer-wmi module so at some point I can even make official pull requests.
 
 ## 🚀 Installation
 To begin, identify your current kernel version:
@@ -123,8 +123,9 @@ Controls the CPU and GPU fan speeds.
 - **1** – Minimum fan speed (not recommended)
 - **100** – Maximum fan speed
 - Other values like **50, 55, 70** can be set according to your preference.
+- Also note that the GPU fan 2 setting will be ignored for machines with 1 gpu fan
 
-Example (set CPU to 50, GPU1 to 70, GPU2 to 70):
+Example (set CPU to 50, GPU fan1 to 70, GPU fan2 to 70):
 
 `echo 50,70,70 | sudo tee /sys/module/linuwu_sense/drivers/platform:acer-wmi/acer-wmi/predator_sense/fan_speed`
 
@@ -238,14 +239,18 @@ The `four_zone_mode` controls advanced RGB effects for your keyboard, requiring 
 The thermal and fan profiles will be saved and loaded on each reboot, ensuring that the settings remain persistent across restarts.
 
 ## 🚧 Roadmap:
-- [ ] GUI for keyboard rgb controls to make it noob friendly.
+- [x] 3 Fans controls (1 cpu fan and 2 gpu fans) for the PTX17-71 (Acer Predator Triton 17 X)
+- [ ] Support for the PTX17-71 RGB keyboard per key color controls.
+- [ ] Turbo mode implementation for PTX17-71, and test it with care.
+- [ ] GUI app for fan controls and controllable FAN curve based on sensors temperature.
+- [ ] GUI app for keyboard rgb controls to make it noob friendly.
 - [x] Module Persistence After Reboot.
-- [ ] Custom Boot Logo Feature Support.
-- [ ] More device support currently only ( PHN16-71 ) is fully supported.
+- [ ] More device support currently only ( PHN16-71 ) is fully supported, ( PTX17-71 ) 3 fans supported.
+- [ ] Made it as much as possible compatible with the original linux acer-wmi module and create pull requests to integrate all features back to the original linux module.
 
 ## License
 GNU General Public License v3
 
 ### 💖 Donations
 Donations are completely optional but show your love for open-source development and motivate me to add more features to this project!
-USDT (BEP20 - BNB Smart Chain): 0xDA7aa42B9Fc3041F20f4Ec828A70E9bDD54A6822
+Ethereum (ERC20): 0xbfb3108422593146f9c11a5264b5f648f1dee7d0
