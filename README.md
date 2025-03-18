@@ -115,9 +115,27 @@ To change the state:
 
 ---
 
-#### **5. Fan Speed  🌬️**
+#### **5. Standard hwmon Fan Speed Controls (like most linux modules)  🌬️**
 
 Controls the CPU and GPU fan speeds.
+
+- **0** – Auto
+- **1** – Minimum fan speed (not recommended)
+- **255** – Maximum fan speed
+- Other values like **50, 135, 170** can be set according to your preference.
+- Also note that the hwmon/pwm3 hwmon/pwm3_enabled files will be available only on predators with 1 cou and 2 gpu fans
+
+Example (set CPU to 140, GPU fan1 to 150, GPU fan2 to 150):
+
+`echo 140 | sudo tee /sys/module/linuwu_sense/drivers/platform:acer-wmi/acer-wmi/hwmon/hwmon4/pwm1`
+`echo 150 | sudo tee /sys/module/linuwu_sense/drivers/platform:acer-wmi/acer-wmi/hwmon/hwmon4/pwm2`
+`echo 150 | sudo tee /sys/module/linuwu_sense/drivers/platform:acer-wmi/acer-wmi/hwmon/hwmon4/pwm3`
+
+---
+
+#### **5.1. Linuwu-Sense not standard Fan Speed Controls  🌬️**
+
+Controls the CPU and GPU fan speeds. (Somewhat easier for command line use but not standard and Linuwu-Sense only)
 
 - **0** – Auto
 - **1** – Minimum fan speed (not recommended)
