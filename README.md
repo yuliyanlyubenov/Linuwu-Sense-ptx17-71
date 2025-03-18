@@ -240,9 +240,9 @@ The thermal and fan profiles will be saved and loaded on each reboot, ensuring t
 
 ## 🚧 Roadmap:
 - [x] 3 Fans controls (1 cpu fan and 2 gpu fans) for the PTX17-71 (Acer Predator Triton 17 X)
-- [ ] Support for the PTX17-71 RGB keyboard per key color controls.
+- [...] (Partially) Support for the PTX17-71 RGB keyboard per key color controls. Basic USB keyboard modes support for linux in separate repository [OpenRGB fork](https://github.com/yuliyanlyubenov/OpenRGB-PTX17-71)
 - [ ] Turbo mode implementation for PTX17-71, and test it with care.
-- [ ] GUI app for fan controls and controllable FAN curve based on sensors temperature.
+- [...] (Partially) GUI app for fan controls and controllable FAN curve based on sensors temperature. For now standartized the 3 fan controls to use standard linux kernel API-s so lm-sensors/fancontrol other tools can work out of the box.
 - [ ] GUI app for keyboard rgb controls to make it noob friendly.
 - [x] Module Persistence After Reboot.
 - [ ] More device support currently only ( PHN16-71 ) is fully supported, ( PTX17-71 ) 3 fans supported.

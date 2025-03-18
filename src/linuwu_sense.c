@@ -2923,6 +2923,9 @@ static ssize_t preadtor_battery_calibration_store(struct device *dev,
 static int cpu_fan_speed = 0;
 static int gpu_fan_speed = 0;
 static int gpu_fan2_speed = 0;
+static int cpu_fan_pwm_enable = 1;
+static int gpu_fan_pwm_enable = 1;
+static int gpu_fan2_pwm_enable = 1;
 
 #define ACER_WMID_CMD_SET_PREDATOR_V4_MAX_GPU_FAN2_SPEED 0x2000010
 #define ACER_WMID_CMD_SET_PREDATOR_V4_MAX_FAN_SPEED 0x820009
@@ -4009,6 +4012,12 @@ static void __init create_debugfs(void)
 			   &interface->debug.wmid_devices);
 }
 
+static const struct hwmon_channel_info *const acer_wmi_hwmon_info[] = {
+    HWMON_CHANNEL_INFO(fan, HWMON_F_INPUT | HWMON_F_LABEL, HWMON_F_INPUT | HWMON_F_LABEL, HWMON_F_INPUT | HWMON_F_LABEL),
+    HWMON_CHANNEL_INFO(pwm, HWMON_PWM_INPUT | HWMON_PWM_ENABLE, HWMON_PWM_INPUT | HWMON_PWM_ENABLE, HWMON_PWM_INPUT | HWMON_PWM_ENABLE),
+    NULL
+};
+
 static umode_t acer_wmi_hwmon_is_visible(const void *data,
 					 enum hwmon_sensor_types type, u32 attr,
 					 int channel)
@@ -4018,11 +4027,24 @@ static umode_t acer_wmi_hwmon_is_visible(const void *data,
 		if (acer_get_fan_speed(channel) >= 0)
 			return 0444;
 		break;
+    case hwmon_pwm:
+        if (channel == 2 && quirks->gpu_fans < 2) {
+            return 0;
+        }
+        return 0644;
 	default:
 		return 0;
 	}
 
 	return 0;
+}
+
+static int fan_percent_to_pwm(int percentage) {
+    return (((percentage * 255) / 100) & 0xFF);
+}
+
+static int fan_pwm_to_percent(int pwm) {
+    return ((pwm * 100) / 255);
 }
 
 static int acer_wmi_hwmon_read(struct device *dev, enum hwmon_sensor_types type,
@@ -4032,11 +4054,45 @@ static int acer_wmi_hwmon_read(struct device *dev, enum hwmon_sensor_types type,
 
 	switch (type) {
 	case hwmon_fan:
-		ret = acer_get_fan_speed(channel);
-		if (ret < 0)
-			return ret;
-		*val = ret;
+        if (attr != hwmon_fan_input) {
+            return -EOPNOTSUPP;
+        }
+        ret = acer_get_fan_speed(channel);
+        if (ret < 0)
+            return ret;
+        *val = ret;
 		break;
+    case hwmon_pwm:
+        if (attr == hwmon_pwm_input) {
+            switch (channel) {
+            case 0:
+                *val = fan_percent_to_pwm(cpu_fan_speed);
+                break;
+            case 1:
+                *val = fan_percent_to_pwm(gpu_fan_speed);
+                break;
+            case 2:
+                *val = fan_percent_to_pwm(gpu_fan2_speed);
+                break;
+            default:
+                return -EOPNOTSUPP;
+            }
+        } else if (attr == hwmon_pwm_enable) {
+            switch (channel) {
+            case 0:
+                *val = cpu_fan_pwm_enable;
+                break;
+            case 1:
+                *val = gpu_fan_pwm_enable;
+                break;
+            case 2:
+                *val = gpu_fan2_pwm_enable;
+                break;
+            default:
+                return -EOPNOTSUPP;
+            }
+        }
+        break;
 	default:
 		return -EOPNOTSUPP;
 	}
@@ -4044,13 +4100,117 @@ static int acer_wmi_hwmon_read(struct device *dev, enum hwmon_sensor_types type,
 	return 0;
 }
 
-static const struct hwmon_channel_info *const acer_wmi_hwmon_info[] = {
-    HWMON_CHANNEL_INFO(fan, HWMON_F_INPUT, HWMON_F_INPUT, HWMON_F_INPUT), NULL
-};
+static const char acer_fan_label[] = "cpu_fan";
+static const char acer_gpu_fan_label[] = "gpu_fan";
+static const char acer_gpu_fan2_label[] = "gpu_fan2";
+
+static int
+acer_wmi_hwmon_read_string(struct device *dev, enum hwmon_sensor_types type, u32 attr,
+		    int channel, const char **buf)
+{
+	if (type != hwmon_fan || attr != hwmon_fan_label) {
+        return -EOPNOTSUPP;
+    }
+
+    switch (channel) {
+    case 0:
+        *buf = acer_fan_label;
+        break;
+    case 1:
+        *buf = acer_gpu_fan_label;
+        break;
+    case 2:
+        *buf = acer_gpu_fan2_label;
+        break;
+    default:
+        return -EOPNOTSUPP;
+    }
+    return 0;
+}
+
+static ssize_t pwm_write(struct device *dev,
+				     int channel, long value) {
+	acpi_status status;
+
+	value = clamp((int)value, 0, 255);
+
+    switch (channel) {
+    case 0:
+        cpu_fan_speed = fan_pwm_to_percent(value);
+        break;
+    case 1:
+        gpu_fan_speed = fan_pwm_to_percent(value);
+        break;
+    case 2:
+        gpu_fan2_speed = fan_pwm_to_percent(value);
+        break;
+    default:
+        return -EOPNOTSUPP;
+    }
+
+    status = acer_set_fan_speed(cpu_fan_speed, gpu_fan_speed, gpu_fan2_speed);
+    if(ACPI_FAILURE(status)){
+        pr_warn("Setting fan speed failed: %d\n", status);
+    } 
+
+	return 0;
+}
+
+static ssize_t pwm_enable_write(struct device *dev,
+				     int channel, long value) {
+	acpi_status status;
+    switch (value) {
+    case 0: // Auto
+        status = acer_set_fan_speed(0, 0, 0);
+        if(ACPI_FAILURE(status)){
+          return -EIO;
+        } 
+        cpu_fan_pwm_enable = 0;
+        gpu_fan_pwm_enable = 0;
+        gpu_fan2_pwm_enable = 0;
+        break;
+    case 1: // Manual
+    case 2:
+        cpu_fan_pwm_enable = value;
+        gpu_fan_pwm_enable = value;
+        gpu_fan2_pwm_enable = value;
+        break;
+    default:
+        return -EINVAL;
+    }
+
+    return 0;
+}
+
+static int
+acer_wmi_hwmon_write(struct device *dev, enum hwmon_sensor_types type, u32 attr,
+	  int channel, long val)
+{
+
+    if (type != hwmon_pwm) {
+        return -EOPNOTSUPP;
+    }
+    if (channel < 0 || channel > 2) {
+        return -EOPNOTSUPP;
+    }
+    
+	switch (attr) {
+	case hwmon_pwm_input:
+      return pwm_write(dev, channel, val);
+    case hwmon_pwm_enable:
+      return pwm_enable_write(dev, channel, val);
+	default:
+		return -EOPNOTSUPP;
+	}
+    return 0;
+}
+
 
 static const struct hwmon_ops acer_wmi_hwmon_ops = {
-	.read = acer_wmi_hwmon_read,
-	.is_visible = acer_wmi_hwmon_is_visible,
+    .is_visible = acer_wmi_hwmon_is_visible,
+    .read = acer_wmi_hwmon_read,
+    .read_string = acer_wmi_hwmon_read_string,
+    .write = acer_wmi_hwmon_write,
 };
 
 static const struct hwmon_chip_info acer_wmi_hwmon_chip_info = {
