@@ -1,6 +1,9 @@
 # Unofficial Linux Kernel Module for Acer Gaming RGB Keyboard Backlight and Turbo Mode (Acer Predator , Nitro) (This repo is PTX17-71 port and backported for linux kernel 6.5. (Forked from the 0x7375646F repo))
 
 Note for Acer Predator Triton 17 X (PTX17-71) only fan control is tested so far. This is very experimental early stage of implementation of the 3 fan controls for cpu, gpu fan1 and gpu fan2. 
+
+# This release have experimental support for lm-sensors/fancontrol or other standard linux fan control software.
+### IMPORTANT NOTE: DO NOT set the 'fancontrol' as service at system boot, for now. If you do so it will start controling the fans too early at boot time and (most probably it is bug in the fancontrol script) it will send command multiple times in the same second. This can have unexpected effects (like shutting down completelly some of the fans) so be careful with the 'fancontrol' tool. I will make fix that will ignore setting fan speed too early and if executed too frequently (like serveral requests in fraction of a second).
     
 The code base is still in its early stages, as I’ve just started working on developing this kernel module. It's a bit messy at the moment, but I’m hopeful that, with your help, we can collaborate to improve its structure and make it more organized over time.
 
@@ -258,9 +261,9 @@ The thermal and fan profiles will be saved and loaded on each reboot, ensuring t
 
 ## 🚧 Roadmap:
 - [x] 3 Fans controls (1 cpu fan and 2 gpu fans) for the PTX17-71 (Acer Predator Triton 17 X)
-- [...] (Partially) Support for the PTX17-71 RGB keyboard per key color controls. Basic USB keyboard modes support for linux in separate repository [OpenRGB fork](https://github.com/yuliyanlyubenov/OpenRGB-PTX17-71)
+- [x] (Partially) Support for the PTX17-71 RGB keyboard per key color controls. Basic USB keyboard modes support for linux in separate repository [OpenRGB fork](https://github.com/yuliyanlyubenov/OpenRGB-PTX17-71)
 - [ ] Turbo mode implementation for PTX17-71, and test it with care.
-- [...] (Partially) GUI app for fan controls and controllable FAN curve based on sensors temperature. For now standartized the 3 fan controls to use standard linux kernel API-s so lm-sensors/fancontrol other tools can work out of the box.
+- [x] (Partially) GUI app for fan controls and controllable FAN curve based on sensors temperature. For now standartized the 3 fan controls to use standard linux kernel API-s so lm-sensors/fancontrol other tools can work out of the box.
 - [ ] GUI app for keyboard rgb controls to make it noob friendly.
 - [x] Module Persistence After Reboot.
 - [ ] More device support currently only ( PHN16-71 ) is fully supported, ( PTX17-71 ) 3 fans supported.
