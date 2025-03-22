@@ -3,7 +3,7 @@
 Note for Acer Predator Triton 17 X (PTX17-71) only fan control is tested so far. This is very experimental early stage of implementation of the 3 fan controls for cpu, gpu fan1 and gpu fan2. 
 
 # This release have experimental support for lm-sensors/fancontrol or other standard linux fan control software.
-### IMPORTANT NOTE: DO NOT set the 'fancontrol' as service at system boot, for now. If you do so it will start controling the fans too early at boot time and (most probably it is bug in the fancontrol script) it will send command multiple times in the same second. This can have unexpected effects (like shutting down completelly some of the fans) so be careful with the 'fancontrol' tool. I will make fix that will ignore setting fan speed too early and if executed too frequently (like serveral requests in fraction of a second).
+### NOTE: If you have used previous version of this module or versions from the '0x7375646F' author, make sure to remove the /etc/predator_state file because the structure of this file is changed here (Because of the 3rd fan support).
     
 The code base is still in its early stages, as I’ve just started working on developing this kernel module. It's a bit messy at the moment, but I’m hopeful that, with your help, we can collaborate to improve its structure and make it more organized over time.
 

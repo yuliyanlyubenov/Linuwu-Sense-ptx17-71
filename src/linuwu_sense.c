@@ -2923,9 +2923,9 @@ static ssize_t preadtor_battery_calibration_store(struct device *dev,
 static int cpu_fan_speed = 0;
 static int gpu_fan_speed = 0;
 static int gpu_fan2_speed = 0;
-static int cpu_fan_pwm_enable = 1;
-static int gpu_fan_pwm_enable = 1;
-static int gpu_fan2_pwm_enable = 1;
+static int cpu_fan_pwm_enable = 2;
+static int gpu_fan_pwm_enable = 2;
+static int gpu_fan2_pwm_enable = 2;
 
 #define ACER_WMID_CMD_SET_PREDATOR_V4_MAX_GPU_FAN2_SPEED 0x2000010
 #define ACER_WMID_CMD_SET_PREDATOR_V4_MAX_FAN_SPEED 0x820009
@@ -3096,8 +3096,8 @@ struct power_states {
 } __attribute__((packed));
 
 static struct power_states current_states = {
-    .battery_state = {0, 0, ACER_PREDATOR_V4_THERMAL_PROFILE_ECO_WMI},
-    .ac_state = {0, 0, ACER_PREDATOR_V4_THERMAL_PROFILE_BALANCED_WMI}
+    .battery_state = {0, 0, 0, ACER_PREDATOR_V4_THERMAL_PROFILE_ECO_WMI},
+    .ac_state = {0, 0, 0, ACER_PREDATOR_V4_THERMAL_PROFILE_BALANCED_WMI}
 };
 
 static int acer_predator_state_update(int value){
@@ -3105,8 +3105,11 @@ static int acer_predator_state_update(int value){
 	int tp;
 	int err = ec_read(ACER_PREDATOR_V4_THERMAL_PROFILE_EC_OFFSET,
 	      &current_tp);
-	if (err < 0)
+	if (err < 0) {
+        pr_err("Can no read predator v4 thermal profile from EC offset!\n");
 		return err;
+    }
+    pr_info("Read thermal profile %d", (int)current_tp);
 	switch (current_tp) {
 		case ACER_PREDATOR_V4_THERMAL_PROFILE_TURBO:
 			tp = ACER_PREDATOR_V4_THERMAL_PROFILE_TURBO_WMI;
@@ -4131,24 +4134,31 @@ acer_wmi_hwmon_read_string(struct device *dev, enum hwmon_sensor_types type, u32
 static ssize_t pwm_write(struct device *dev,
 				     int channel, long value) {
 	acpi_status status;
+    int t_cpu_fan_speed, t_gpu_fan_speed, t_gpu_fan2_speed;
 
 	value = clamp((int)value, 0, 255);
 
     switch (channel) {
     case 0:
-        cpu_fan_speed = fan_pwm_to_percent(value);
+        t_cpu_fan_speed = fan_pwm_to_percent(value);
+        t_gpu_fan_speed = gpu_fan_speed;
+        t_gpu_fan2_speed = gpu_fan2_speed;
         break;
     case 1:
-        gpu_fan_speed = fan_pwm_to_percent(value);
+        t_gpu_fan_speed = fan_pwm_to_percent(value);
+        t_cpu_fan_speed = cpu_fan_speed;
+        t_gpu_fan2_speed = gpu_fan2_speed;
         break;
     case 2:
-        gpu_fan2_speed = fan_pwm_to_percent(value);
+        t_gpu_fan2_speed = fan_pwm_to_percent(value);
+        t_cpu_fan_speed = cpu_fan_speed;
+        t_gpu_fan_speed = gpu_fan_speed;
         break;
     default:
         return -EOPNOTSUPP;
     }
 
-    status = acer_set_fan_speed(cpu_fan_speed, gpu_fan_speed, gpu_fan2_speed);
+    status = acer_set_fan_speed(t_cpu_fan_speed, t_gpu_fan_speed, t_gpu_fan2_speed);
     if(ACPI_FAILURE(status)){
         pr_warn("Setting fan speed failed: %d\n", status);
     } 
@@ -4160,24 +4170,20 @@ static ssize_t pwm_enable_write(struct device *dev,
 				     int channel, long value) {
 	acpi_status status;
     switch (value) {
-    case 0: // Auto
+    case 0: // Disable control, set to auto
+    case 1: // Manual control, start at auto
+    case 2: // Auto
         status = acer_set_fan_speed(0, 0, 0);
         if(ACPI_FAILURE(status)){
           return -EIO;
         } 
-        cpu_fan_pwm_enable = 0;
-        gpu_fan_pwm_enable = 0;
-        gpu_fan2_pwm_enable = 0;
-        break;
-    case 1: // Manual
-    case 2:
-        cpu_fan_pwm_enable = value;
-        gpu_fan_pwm_enable = value;
-        gpu_fan2_pwm_enable = value;
         break;
     default:
         return -EINVAL;
     }
+    cpu_fan_pwm_enable = value;
+    gpu_fan_pwm_enable = value;
+    gpu_fan2_pwm_enable = value;
 
     return 0;
 }
