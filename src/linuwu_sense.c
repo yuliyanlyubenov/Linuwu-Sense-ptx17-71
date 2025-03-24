@@ -3950,6 +3950,10 @@ static int acer_suspend(struct device *dev)
 		data->brightness = value;
 	}
 
+    if (has_cap(ACER_CAP_PREDATOR_SENSE)) {
+        acer_predator_state_save();
+    }
+
 	return 0;
 }
 
@@ -3968,6 +3972,10 @@ static int acer_resume(struct device *dev)
 
 	if (acer_wmi_accel_dev)
 		acer_gsensor_init();
+
+    if (has_cap(ACER_CAP_PREDATOR_SENSE)) {
+        acer_predator_state_load();
+    }
 
 	return 0;
 }
