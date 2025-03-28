@@ -1,4 +1,4 @@
-# Unofficial Linux Kernel Module for Acer Gaming RGB Keyboard Backlight and Turbo Mode (Acer Predator , Nitro) (This repo is PTX17-71 port and backported for linux kernel 6.5. (Forked from the 0x7375646F repo))
+# Unofficial Linux Kernel Module for Acer Gaming RGB Keyboard Backlight and Turbo Mode (Acer Predator , Nitro) (This repo is PTX17-71 port. (Forked from the 0x7375646F repo))
 
 Note for Acer Predator Triton 17 X (PTX17-71) only fan control is tested so far. This is very experimental early stage of implementation of the 3 fan controls for cpu, gpu fan1 and gpu fan2. 
 
@@ -15,7 +15,7 @@ To begin, identify your current kernel version:
 uname -r
 ```
 
-Install the appropriate Linux headers based on your kernel version. This module has been tested with kernel version (6.5.0). If you want 6.12 or 6.13 clone the original repo from 0x7375646F and possibly apply my changes by using git diff or just unix diff utils.
+Install the appropriate Linux headers based on your kernel version. This module has been tested with kernel version 6.12.
 For Arch Linux:
 ```bash
 sudo pacman -S linux-headers
