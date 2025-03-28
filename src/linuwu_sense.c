@@ -2391,6 +2391,8 @@ static void acer_wmi_notify(u32 value, void *context)
 		return;
 	}
 
+	obj = (union acpi_object *)response.pointer;
+
 	if (!obj)
 		return;
 	if (obj->type != ACPI_TYPE_BUFFER) {
